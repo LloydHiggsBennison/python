@@ -2,23 +2,24 @@ from listaLibros import lista_libros
 import os
 
 ############################################################################################################
-# Funciones manejo de errores y excepciones
-
-
-############################################################################################################
-############################################################################################################
 # Display de menu principal
 
 def mainMenu():
-    print("")
-    print("\033[36m### Bienvenidos a la Biblioteca, por favor selecciona una opcion ###\033[0m")
-    print("")
-    print("1.- Agregar un Libro a Biblioteca")
-    print("2.- Actualizar la informacion del Libro")
-    print("3.- Buscar un Libro en Biblioteca")
-    print("4.- Listar los Libros agregados")
-    print("5.- Eliminar un Libro de la Biblioteca")
-    print("6.- Salir del programa")
+    if len(lista_libros) == 0:    
+        print("")
+        print("\033[36m### Bienvenidos a la Biblioteca, por favor agrega un libro para continuar: ###\033[0m")
+        print("")
+        print("1.- Agregar un Libro a Biblioteca")
+    else:        
+        print("")
+        print("\033[36m### Bienvenidos a la Biblioteca, por favor selecciona una opcion ###\033[0m")
+        print("")
+        print("1.- Agregar un Libro a Biblioteca")
+        print("2.- Actualizar la informacion del Libro")
+        print("3.- Buscar un Libro en Biblioteca")
+        print("4.- Listar los Libros agregados")
+        print("5.- Eliminar un Libro de la Biblioteca")
+        print("6.- Salir del programa")
 
 
 ############################################################################################################
@@ -63,6 +64,16 @@ def agregarLibro():
 # Funcion para editar la informacion del libro
 
 def actualizarLibro():
+    while True:
+        try:
+            if len(lista_libros) == 0:
+                print("No hay libros en la biblioteca.")
+                input("Presiona enter para continuar: ")
+                os.system("cls")
+                return
+            break
+        except ValueError:
+            print("No hay libros en la biblioteca.")
     index = 1
     for libro in lista_libros:
         print(f"{index}.- Titulo: {libro['Titulo']}")
@@ -131,9 +142,19 @@ def buscarLibro():
             os.system("cls")
 
 ############################################################################################################
-
 # Funcion para listar todos los libros
+
 def listarLibros():
+    while True:
+        try:
+            if len(lista_libros) == 0:
+                print("No hay libros en la biblioteca.")
+                input("Presiona enter para continuar: ")
+                os.system("cls")
+                return
+            break
+        except ValueError:
+            print("No hay libros en la biblioteca.")
     index = 1
     for libro in lista_libros:
         print(f"{index}.- Titulo: {libro['Titulo']} - Autor: {libro['Autor']} - Año de publicacion: {libro['Año']}")
@@ -143,6 +164,7 @@ def listarLibros():
 
 ############################################################################################################
 # Funcion para eliminar libros
+
 def eliminarLibro():
     index = 1
     for libro in lista_libros:
