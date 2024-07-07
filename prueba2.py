@@ -1,6 +1,5 @@
-from clases import agregar_Libro
 from funciones import mainMenu, agregarLibro, actualizarLibro, buscarLibro, listarLibros, eliminarLibro
-from clases import lista_libros
+from listaLibros import lista_libros
 import os
 # agregar Libros, atraves de una funcion (titulo, autor, año de publicacion), utilizando una lista para almacenar diccionarios, cada diccionario es un libro.
 # verificar año de publicacion que sea numero positivo, y generar un mensaje de error si no es un numero positivo.
