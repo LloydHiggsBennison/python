@@ -23,7 +23,7 @@ def mainMenu():
 
 
 ############################################################################################################
-# Funcion de agregar libro
+# Funcion para agregar libro
 
 def agregarLibro():
     while True:
@@ -77,6 +77,7 @@ def actualizarLibro():
     index = 1
     for libro in lista_libros:
         print(f"{index}.- Titulo: {libro['Titulo']}")
+        index += 1
     titulo = input("Ingresa el titulo del libro a actualizar: ").capitalize()
     for libro in lista_libros:
         if libro["Titulo"] == titulo:
@@ -119,25 +120,24 @@ def buscarLibro():
                 input("Presiona enter para continuar: ")
                 os.system("cls")
                 return
-            break
-        except ValueError:
-            print("No hay libros en la biblioteca.")
-    while True:
-        try:
             titulo = input("Ingresa el titulo del libro a buscar: ").capitalize()
+            libro_encontrado = False
             for libro in lista_libros:
-                if libro["Titulo"] != titulo:
-                    print("Libro no encontrado.")
-                    input("Presiona enter para continuar: ")
-                    os.system("cls")
-                elif libro["Titulo"] == titulo:
+                if libro["Titulo"] == titulo:
                     print(f"Titulo: {libro['Titulo']} - Autor: {libro['Autor']} - Año de publicacion: {libro['Año']}")
-                    input("Presiona enter para continuar: ")
-                    os.system("cls")
-                    return
-                break
+                    libro_encontrado = True
+                    break
+            if not libro_encontrado:
+                print("Libro no encontrado.")
+                input("Presiona enter para continuar: ")
+                os.system("cls")
+                return
+            else:
+                input("Presiona enter para continuar: ")
+                os.system("cls")
+                return
         except ValueError:
-            print("Libro no encontrado.")
+            print("Se produjo un error")
             input("Presiona enter para continuar: ")
             os.system("cls")
 
