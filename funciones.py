@@ -170,11 +170,20 @@ def eliminarLibro():
     for libro in lista_libros:
         print(f"{index}.- {libro['Titulo']}")
         index += 1
-    opcion = int(input("Selecciona el libro a eliminar: "))
-    if opcion > 0 and opcion <= len(lista_libros):
+    entrada = input("Selecciona el libro a eliminar: ")
+    try:
+        opcion = int(entrada) if entrada.strip() != "" else 0
+    except ValueError:
+        print("Opcion invalida.")
+        input("Presiona enter para continuar: ")
+        os.system("cls")
+        return
+
+    if 0 < opcion <= len(lista_libros):
         libro_eliminado = lista_libros.pop(opcion - 1)
         print(f"Libro '{libro_eliminado['Titulo']}' eliminado.")
     else:
         print("Opcion invalida.")
+    
     input("Presiona enter para continuar: ")
     os.system("cls")
