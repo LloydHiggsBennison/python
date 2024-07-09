@@ -166,6 +166,11 @@ def listarLibros():
 # Funcion para eliminar libros
 
 def eliminarLibro():
+    if len(lista_libros) == 0:
+        print("No hay libros en la biblioteca.")
+        input("Presiona enter para continuar: ")
+        os.system("cls")
+        return
     index = 1
     for libro in lista_libros:
         print(f"{index}.- {libro['Titulo']}")
