@@ -1,57 +1,106 @@
+import json 
 from listaLibros import lista_libros
 import os
+import hashlib
 
 ############################################################################################################
 # Display de menu principal
 
-def mainMenu():
-    if len(lista_libros) == 0:    
-        print("")
-        print("\033[36m### Bienvenidos a la Biblioteca, por favor agrega un libro para continuar: ###\033[0m")
-        print("")
+def mainMenu(lista_libros):
+    print("\n\033[36m### Bienvenidos a la Biblioteca ###\033[0m\n")
+    if not lista_libros:
+        print("Por favor, agrega un libro para continuar:")
         print("1.- Agregar un Libro a Biblioteca")
-    else:        
-        print("")
-        print("\033[36m### Bienvenidos a la Biblioteca, por favor selecciona una opcion ###\033[0m")
-        print("")
+        print("2.- Salir del programa")
+    else:
+        print("Por favor, selecciona una opción:")
         print("1.- Agregar un Libro a Biblioteca")
-        print("2.- Actualizar la informacion del Libro")
+        print("2.- Actualizar la información del Libro")
         print("3.- Buscar un Libro en Biblioteca")
-        print("4.- Listar los Libros agregados")
-        print("5.- Eliminar un Libro de la Biblioteca")
-        print("6.- Salir del programa")
+        print("4.- Buscar los Libros Disponibles")
+        print("5.- Listar los Libros agregados")
+        print("6.- Eliminar un Libro de la Biblioteca")
+        print("7.- Buscar un libro por SKU")
+        print("8.- Salir del programa")
 
 
 ############################################################################################################
-# Funcion para agregar libro
+# Se genera funcion para cargar usuarios
+# Y hacer comprobaciones de errores si los usuarios existen o no, tambien para ingresar al sistema
 
-def agregarLibro():
+def cargarUsuarios():
+    ruta_archivo = os.path.join('E:\\Visual Studio Code\\Python\\Prueba2\\usuarios.json')
+    try:
+        with open(ruta_archivo, 'r') as archivo:
+            datos = json.load(archivo)
+            return datos['usuarios']
+    except FileNotFoundError:
+        print(f"El archivo de usuarios no fue encontrado en la ruta: {ruta_archivo}.")
+        return []
+    except json.JSONDecodeError:
+        print("Error al decodificar el archivo JSON.")
+        return []
+
+usuarios = cargarUsuarios()
+print(usuarios)
+
+############################################################################################################
+# Funcion para agregar libro
+# Se agrega validaciones de titulo, autor, año y disponibilidad
+# Se agrega un SKU al libro
+# Se verifica que los datos no sean largos para que puedan ser guardados en el archivo JSON
+# Se agrega strip para eliminar espacios en blanco
+
+def agregarLibro(lista_libros):
     while True:
-        titulo = input("Ingresa el titulo del libro: ").capitalize()
-        if titulo != "":
+        titulo = input("Ingresa el titulo del libro: ").capitalize().strip()
+        if titulo:
+            if len(titulo) > 100:
+                print("El título es demasiado largo. Intenta con un título más corto.")
+                continue
             break
-        print("El titulo del libro no puede estar vacio.")
+        else:
+            print("El titulo del libro no puede estar vacio.")
+    
     while True:
-        autor = input("Ingresa el autor del libro: ").capitalize()
-        if autor != "":
+        autor = input("Ingresa el autor del libro: ").capitalize().strip()
+        if autor:
+            if len(autor) > 100:
+                print("El nombre del autor es demasiado largo. Intenta con un nombre más corto.")
+                continue
             break
-        print("El autor del libro no puede estar vacio.")
+        else:
+            print("El autor del libro no puede estar vacio.")
+    
     while True:
         try:
-            año = int(input("Ingresa el año de publicacion del libro: "))
-            if año < 0 :
-                print("El año de publicacion debe ser un numero positivo.")
+            año = input("Ingresa el año de publicacion del libro: ").strip()
+            if not año.isdigit() or len(año) != 4 or int(año) < 0:
+                print("El año de publicacion debe ser un número positivo de 4 dígitos.")
                 continue
-            elif len(str(año)) > 4:
-                print("El año de publicacion debe tener 4 digitos, ejemplo: 2024")
-                continue
+            año = int(año)
             break
         except ValueError:
-            print("El año de publicacion debe ser un numero positivo.")
+            print("El año de publicacion debe ser un número.")
+
+    while True:
+        disponible = input("El libro esta disponible? (si/no): ").strip().lower()
+        if disponible == "si":
+            disponible = True
+            break
+        elif disponible == "no":
+            disponible = False
+            break
+        else:
+            print("Ingresa 'si' o 'no'.")
+
+    ind_sku = 1
+    for libro in lista_libros:
+        if libro["SKU"] == f"SKU{ind_sku}":
+            ind_sku += 1
+    sku = hashlib.sha256(str(ind_sku).encode()).hexdigest()
             
-    libro = {"Titulo": titulo, 
-             "Autor": autor, 
-             "Año": año}
+    libro = {"Titulo": titulo, "Autor": autor, "Año": año, "Estado": disponible, "SKU": sku}
     lista_libros.append(libro)
     print(f"El libro '{titulo}' se ha agregado a la biblioteca exitosamente.")
     print(libro)
@@ -59,136 +108,173 @@ def agregarLibro():
     os.system("cls")
 
 
-
 ############################################################################################################
-# Funcion para editar la informacion del libro
+# Función para editar la información del libro
+# Se agrega strip para eliminar espacios en blanco
 
-def actualizarLibro():
-    while True:
-        try:
-            if len(lista_libros) == 0:
-                print("No hay libros en la biblioteca.")
-                input("Presiona enter para continuar: ")
-                os.system("cls")
-                return
-            break
-        except ValueError:
-            print("No hay libros en la biblioteca.")
+def actualizarLibro(lista_libros):
+    if not lista_libros:
+        print("No hay libros en la biblioteca.")
+        input("Presiona enter para continuar: ")
+        os.system("cls")
+        return
+
     index = 1
     for libro in lista_libros:
         print(f"{index}.- Titulo: {libro['Titulo']}")
         index += 1
-    titulo = input("Ingresa el titulo del libro a actualizar: ").capitalize()
+
+    titulo = input("Ingresa el titulo del libro a actualizar: ").capitalize().strip()
+    libro_encontrado = False
+
     for libro in lista_libros:
         if libro["Titulo"] == titulo:
-            nuevo_titulo = input("Ingresa el nuevo titulo: ").capitalize()
-            nuevo_autor = input("Ingresa el nuevo autor: ").capitalize()
+            libro_encontrado = True
+            nuevo_titulo = input("Ingresa el nuevo titulo: ").capitalize().strip()
+            nuevo_autor = input("Ingresa el nuevo autor: ").capitalize().strip()
+
             while True:
-                try:
-                    nuevo_año = int(input("Ingresa el nuevo año de publicacion: "))
-                    if nuevo_año < 0 :
-                        print("El año de publicacion debe ser un numero positivo.")
-                        continue
-                    elif len(str(nuevo_año)) > 4:
-                        print("El año de publicacion debe tener 4 digitos, ejemplo: 2024")
-                        continue
-                    break
-                except ValueError:
-                    print("El año de publicacion debe ser un numero positivo.")
+                nuevo_año = input("Ingresa el nuevo año de publicacion: ").strip()
+                if not nuevo_año.isdigit() or len(nuevo_año) != 4 or int(nuevo_año) < 0:
+                    print("El año de publicacion debe ser un número positivo de 4 dígitos.")
+                    continue
+                nuevo_año = int(nuevo_año)
+                break
+            cambio_disponible = input("El libro esta disponible? (si/no): ").strip().lower()
+
             libro["Titulo"] = nuevo_titulo
             libro["Autor"] = nuevo_autor
             libro["Año"] = nuevo_año
+            libro["Estado"] = True if cambio_disponible == "si" else False
             print(f"Se ha actualizado la informacion del libro '{titulo}' correctamente.")
             print(libro)
             input("Presiona enter para continuar: ")
             os.system("cls")
             return
-    print("Libro no encontrado.")
-    input("Presiona enter para continuar: ")
-    os.system("cls")
 
+    if not libro_encontrado:
+        print("Libro no encontrado.")
+        input("Presiona enter para continuar: ")
+        os.system("cls")
 
 
 ############################################################################################################
-# Funcion para buscar un libro
+# Función para buscar un libro
+# Se agrega strip para eliminar espacios en blanco
 
-def buscarLibro():
-    while True:
-        try:
-            if len(lista_libros) == 0:
-                print("No hay libros en la biblioteca.")
-                input("Presiona enter para continuar: ")
-                os.system("cls")
-                return
-            titulo = input("Ingresa el titulo del libro a buscar: ").capitalize()
-            libro_encontrado = False
-            for libro in lista_libros:
-                if libro["Titulo"] == titulo:
-                    print(f"Titulo: {libro['Titulo']} - Autor: {libro['Autor']} - Año de publicacion: {libro['Año']}")
-                    libro_encontrado = True
-                    break
-            if not libro_encontrado:
-                print("Libro no encontrado.")
-                input("Presiona enter para continuar: ")
-                os.system("cls")
-                return
-            else:
-                input("Presiona enter para continuar: ")
-                os.system("cls")
-                return
-        except ValueError:
-            print("Se produjo un error")
-            input("Presiona enter para continuar: ")
-            os.system("cls")
-
-############################################################################################################
-# Funcion para listar todos los libros
-
-def listarLibros():
-    while True:
-        try:
-            if len(lista_libros) == 0:
-                print("No hay libros en la biblioteca.")
-                input("Presiona enter para continuar: ")
-                os.system("cls")
-                return
-            break
-        except ValueError:
-            print("No hay libros en la biblioteca.")
-    index = 1
-    for libro in lista_libros:
-        print(f"{index}.- Titulo: {libro['Titulo']} - Autor: {libro['Autor']} - Año de publicacion: {libro['Año']}")
-        index += 1
-    input("Presiona enter para continuar: ")
-    os.system("cls")
-
-############################################################################################################
-# Funcion para eliminar libros
-
-def eliminarLibro():
-    if len(lista_libros) == 0:
+def buscarLibro(lista_libros):
+    if not lista_libros:
         print("No hay libros en la biblioteca.")
         input("Presiona enter para continuar: ")
         os.system("cls")
         return
-    index = 1
+
+    titulo = input("Ingresa el titulo del libro a buscar: ").capitalize().strip()
+
+    libro_encontrado = False
     for libro in lista_libros:
-        print(f"{index}.- {libro['Titulo']}")
-        index += 1
-    entrada = input("Selecciona el libro a eliminar: ")
-    try:
-        opcion = int(entrada) if entrada.strip() != "" else 0
-    except ValueError:
-        print("Opcion invalida.")
+        if libro["Titulo"] == titulo:
+            print(f"Titulo: {libro['Titulo']} - Autor: {libro['Autor']} - Año de publicacion: {libro['Año']}")
+            libro_encontrado = True
+            break
+
+    if not libro_encontrado:
+        print("Libro no encontrado.")
+    else:
+        print("Libro encontrado.")
+
+    input("Presiona enter para continuar: ")
+    os.system("cls")
+
+
+############################################################################################################
+# Se agrega función para listar los libros disponibles
+# Se verifica que el mensaje de los libros no disponibles simplemetne no se muestre
+
+def verLibrosDisponibles(lista_libros):
+    if not lista_libros:
+        print("No hay libros en la biblioteca.")
         input("Presiona enter para continuar: ")
         os.system("cls")
         return
 
-    if 0 < opcion <= len(lista_libros):
-        libro_eliminado = lista_libros.pop(opcion - 1)
-        print(f"Libro '{libro_eliminado['Titulo']}' eliminado.")
+    for libro in lista_libros:
+        if libro["Estado"] == True:
+            print(f"Titulo: {libro['Titulo']} - Autor: {libro['Autor']} - Año de publicacion: {libro['Año']}")
+    input("Presiona enter para continuar: ")
+    os.system("cls")
+
+############################################################################################################
+# Función para listar todos los libros
+# Se modifica el codigo quitando ciclo while y try para manejo de errores,.
+# Se modica el codigo con el index y se agrega enumerate para indice.
+
+def listarLibros(lista_libros):
+    if not lista_libros:
+        print("No hay libros en la biblioteca.")
+        input("Presiona enter para continuar: ")
+        os.system("cls")
+        return
+
+    for index, libro in enumerate(lista_libros, start=1):
+        print(f"{index}.- Titulo: {libro['Titulo']} - Autor: {libro['Autor']} - Año de publicacion: {libro['Año']}")
+
+    input("Presiona enter para continuar: ")
+    os.system("cls")
+
+
+############################################################################################################
+# Se agrega función para buscar un libro por SKU
+# Se agrega strip a la entrada de SKU para evitar errores de espacios
+
+def buscarSKU(lista_libros):
+    if not lista_libros:
+        print("No hay libros en la biblioteca.")
+        input("Presiona enter para continuar: ")
+        os.system("cls")
+        return
+
+    sku = input("Ingresa el SKU del libro a buscar: ").strip()
+
+    libro_encontrado = False
+    for libro in lista_libros:
+        if libro["SKU"] == sku:
+            print(f"Titulo: {libro['Titulo']} - Autor: {libro['Autor']} - Año de publicacion: {libro['Año']}")
+            libro_encontrado = True
+            break
+
+    if not libro_encontrado:
+        print("Libro no encontrado.")
     else:
-        print("Opcion invalida.")
-    
+        print("Libro encontrado.")
+
+    input("Presiona enter para continuar: ")
+    os.system("cls")
+
+
+############################################################################################################
+# Función para eliminar libros
+
+def eliminarLibro(lista_libros):
+    if not lista_libros:
+        print("No hay libros en la biblioteca.")
+        input("Presiona enter para continuar: ")
+        os.system("cls")
+        return
+
+    for index, libro in enumerate(lista_libros, start=1):
+        print(f"{index}.- {libro['Titulo']}")
+
+    entrada = input("Selecciona el libro a eliminar: ").strip()
+    if not entrada.isdigit() or not 0 < int(entrada) <= len(lista_libros):
+        print("Opción inválida.")
+        input("Presiona enter para continuar: ")
+        os.system("cls")
+        return
+
+    opcion = int(entrada)
+    libro_eliminado = lista_libros.pop(opcion - 1)
+    print(f"Libro '{libro_eliminado['Titulo']}' eliminado.")
+
     input("Presiona enter para continuar: ")
     os.system("cls")
